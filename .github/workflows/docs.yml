@@ -1,9 +1,8 @@
-name: Publish Docs
-
+name: Publish documentation to GitHub Pages
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -18,17 +17,16 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.event_name, 'pull') }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@v6
+      - uses: actions/configure-pages@v5
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.2"
-      - name: Build RDoc
-        run: rdoc --output doc --main README.md README.md lib
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+          ruby-version: 4.0
+          bundler-cache: true
+      - run: rdoc --output doc --main README.md README.md lib
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: doc
 
@@ -39,6 +37,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
